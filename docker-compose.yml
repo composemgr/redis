@@ -1,0 +1,25 @@
+name: redis
+services:
+  redis:
+    image: redis:latest
+    restart: always
+    container_name: redis
+    hostname: redis
+    command: ['redis-server', '/etc/redis/redis.conf']
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DATABASES=10000000000
+      - REDIS_PASSWORD=${DB_ADMIN_PASS:-77P05lWdIEJ8}
+      - REDIS_EXTRA_FLAGS=--save 60 1 --loglevel warning
+    ports:
+      - '6379:6379'
+    volumes:
+      - /var/lib/srv/$USER/docker/library/redis/latest/rootfs/data/db/redis:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli ping | grep PONG']
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    extra_hosts:
+      - 'localhost:172.17.0.1'
+      - 'host.docker.internal:host-gateway'
