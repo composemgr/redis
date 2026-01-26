@@ -14,7 +14,7 @@ Redis is an open-source, in-memory data structure store used as a database, cach
 
 ### Using curl
 ```shell
-curl -q -LSsf "https://raw.githubusercontent.com/composemgr/redis/main/docker-compose.yaml" | docker compose -f - up -d
+curl -q -LSsf "https://raw.githubusercontent.com/composemgr/redis/main/docker-compose.yaml" -o compose.yml
 ```
 
 ### Using git
