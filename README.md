@@ -40,7 +40,7 @@ REDIS_PASSWORD=changeme_admin_password
 
 ### Redis Configuration
 
-Edit `rootfs/config/redis/redis.conf` for advanced settings:
+Edit `volumes/config/redis/redis.conf` for advanced settings:
 ```conf
 # Memory
 maxmemory 256mb
@@ -76,8 +76,8 @@ services:
 
 ## 📂 Volumes
 
-- `./rootfs/db/redis/redis` - RDB snapshots and AOF logs
-- `./rootfs/config/redis` - Redis configuration
+- `./volumes/db/redis/redis` - RDB snapshots and AOF logs
+- `./volumes/config/redis` - Redis configuration
 
 ## 🔐 Security
 
@@ -129,7 +129,7 @@ docker compose exec db redis-cli -a password INFO memory
 docker compose exec db redis-cli -a password BGSAVE
 
 # Copy RDB file
-cp rootfs/db/redis/redis/dump.rdb backup-$(date +%Y%m%d).rdb
+cp volumes/db/redis/redis/dump.rdb backup-$(date +%Y%m%d).rdb
 ```
 
 ### Restore
@@ -138,7 +138,7 @@ cp rootfs/db/redis/redis/dump.rdb backup-$(date +%Y%m%d).rdb
 docker compose down
 
 # Replace RDB file
-cp backup-YYYYMMDD.rdb rootfs/db/redis/redis/dump.rdb
+cp backup-YYYYMMDD.rdb volumes/db/redis/redis/dump.rdb
 
 # Start Redis
 docker compose up -d
