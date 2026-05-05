@@ -37,7 +37,7 @@ services:
     ports:
       - '6379:6379'
     volumes:
-      - './rootfs/data/db/redis:/data'
+      - './volumes/data/db/redis:/data'
     healthcheck:
       test: ['CMD-SHELL', 'redis-cli ping | grep PONG']
       interval: 1s
