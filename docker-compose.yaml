@@ -11,25 +11,25 @@ name: redis
 services:
   redis:
     image: redis:latest
-    container_name: redis
+    container_name: redis-app
     hostname: redis
     restart: always
     pull_policy: always
     logging: *default-logging
-    command: ['redis-server', '/etc/redis/redis.conf']
+    command: >
+      redis-server
+      --save 60 1
+      --loglevel warning
+      --requirepass ${DB_ADMIN_PASS:-changeme_admin_password}
     environment:
       TZ: ${TZ:-America/New_York}
-      ALLOW_EMPTY_PASSWORD: yes
-      REDIS_DATABASES: 10000000000
-      REDIS_PASSWORD: ${DB_ADMIN_PASS:-changeme_admin_password}
-      REDIS_EXTRA_FLAGS: --save 60 1 --loglevel warning
-      CONTAINER_NAME: redis
+      CONTAINER_NAME: redis-app
     ports:
       - '6379:6379'
     volumes:
       - './volumes/data/db/redis:/data'
     healthcheck:
-      test: ['CMD-SHELL', 'redis-cli ping | grep PONG']
+      test: ['CMD-SHELL', 'redis-cli -a "${DB_ADMIN_PASS:-changeme_admin_password}" ping | grep PONG']
       interval: 1s
       timeout: 3s
       retries: 5
