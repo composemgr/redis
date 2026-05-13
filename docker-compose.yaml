@@ -7,15 +7,6 @@ x-logging: &default-logging
     max-file: '1'
   driver: json-file
 
-# nginx proxy address - http://172.17.0.1:6379
-
-
-x-logging: &default-logging
-  options:
-    max-size: '5m'
-    max-file: '1'
-  driver: json-file
-
 name: redis
 services:
   redis:
@@ -25,15 +16,14 @@ services:
     restart: always
     pull_policy: always
     logging: *default-logging
-    logging: *default-logging
     command: ['redis-server', '/etc/redis/redis.conf']
     environment:
-      TZ: ${TZ:-America/New_York}
       TZ: ${TZ:-America/New_York}
       ALLOW_EMPTY_PASSWORD: yes
       REDIS_DATABASES: 10000000000
       REDIS_PASSWORD: ${DB_ADMIN_PASS:-changeme_admin_password}
       REDIS_EXTRA_FLAGS: --save 60 1 --loglevel warning
+      CONTAINER_NAME: redis
     ports:
       - '6379:6379'
     volumes:
