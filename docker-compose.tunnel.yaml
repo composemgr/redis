@@ -1,0 +1,45 @@
+name: redis
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+
+  redis:
+    image: redis:latest
+    container_name: redis-app
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: redis-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+    volumes:
+      - './volumes/db/redis/redis:/var/lib/redis/data:z'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - 'cloudflare.enable=true'
+      - 'cloudflare.service=http://redis-app:6379'
+      - 'cloudflare.hostname=${BASE_HOST_NAME:-$HOSTNAME}'
+    networks:
+      - redis
+      - cloudflare
+
+networks:
+  redis:
+    name: redis
+    external: false
+  cloudflare:
+    name: cloudflare
+    external: true

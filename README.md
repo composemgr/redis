@@ -1,31 +1,36 @@
 ## 👋 Welcome to redis 🚀
 
-Redis - In-memory data structure store (cache, message broker, database)
+Redis — in-memory data store used as a cache, database and message broker
 
 ## 📋 Description
 
-Redis is an open-source, in-memory data structure store used as a database, cache, message broker, and streaming engine. Known for blazing-fast performance and versatile data structures.
+Redis — in-memory data store used as a cache, database and message broker
 
 ## 🚀 Services
 
-- **db**: Redis 7 Alpine (`redis:7-alpine`)
+- **redis**: `redis:latest`
+
+### Infrastructure Components
+
+- None
 
 ## 📦 Installation
 
-### Using curl
-```shell
+### Option 1: Quick Install
+```bash
 curl -q -LSsf "https://raw.githubusercontent.com/composemgr/redis/main/docker-compose.yaml" -o compose.yml
 ```
 
-### Using git
-```shell
+### Option 2: Git Clone
+```bash
 git clone "https://github.com/composemgr/redis" ~/.local/srv/docker/redis
 cd ~/.local/srv/docker/redis
-docker compose up -d
+cp default.env .env
+docker compose --env-file .env up -d
 ```
 
-### Using composemgr
-```shell
+### Option 3: Using composemgr
+```bash
 composemgr install redis
 ```
 
@@ -33,161 +38,91 @@ composemgr install redis
 
 ### Environment Variables
 
-```shell
-TZ=America/New_York
-REDIS_PASSWORD=changeme_admin_password
+See `app.env.sample` for the app-specific variables. The full set of shared
+variables lives in `default.env.sample`.
+
+### Environment Files
+
+`default.env.sample` holds the full set of variables and is copied to `.env`
+before starting the stack:
+
+```bash
+cp default.env .env
+docker compose --env-file .env up -d
 ```
 
-### Redis Configuration
+`app.env.sample` holds the app-specific overrides and is copied to `app.env`:
 
-Edit `volumes/config/redis/redis.conf` for advanced settings:
-```conf
-# Memory
-maxmemory 256mb
-maxmemory-policy allkeys-lru
+```bash
+cp app.env.sample app.env
+```
 
-# Persistence
-save 900 1
-save 300 10
-save 60 10000
+`composemgr up` applies `app.env` and `default.env` automatically. Raw
+`docker compose` commands need `--env-file .env` to pick up the same values.
 
-# Security
-requirepass your_password_here
+### Reverse Proxy
 
-# Networking
-bind 0.0.0.0
-protected-mode yes
+Three standalone compose files ship in this repo:
+
+| File | Use |
+|------|-----|
+| `docker-compose.yaml` | Default, published on `172.17.0.1:64325` |
+| `docker-compose.traefik.yaml` | Behind an existing external `traefik` network |
+| `docker-compose.tunnel.yaml` | Behind an existing external `cloudflare` tunnel network |
+
+```bash
+docker compose -f docker-compose.traefik.yaml --env-file .env up -d
 ```
 
 ## 🌐 Access
 
-- **Redis**: localhost:6379 (from Docker host)
-- **Connection**: `redis://localhost:6379` or `redis://:password@localhost:6379`
+- **Web UI**: redis://172.17.0.1:6379
 
-### Connect from another container
-```yaml
-services:
-  app:
-    environment:
-      REDIS_URL: redis://:password@redis-db:6379/0
-    depends_on:
-      - redis
-```
+## 💾 Volumes
 
-## 📂 Volumes
+- `./volumes/db/redis/redis` - Dataset snapshot
 
-- `./volumes/db/redis/redis` - RDB snapshots and AOF logs
-- `./volumes/config/redis` - Redis configuration
+Redis publishes its native `6379` port on the host; `64325` is not used.
 
 ## 🔐 Security
 
-- **Set password**: Use `requirepass` in config
-- **Bind to localhost**: Or use firewall rules
-- **Rename dangerous commands**: CONFIG, FLUSHALL, etc.
-- **Use ACLs**: Redis 6+ access control lists
-- **Regular backups**: Enable RDB/AOF persistence
-
-### Example ACL Configuration
-```
-user default on nopass ~* &* +@all
-user app on >password ~app:* &* +@all -@dangerous
-```
+- Change all default passwords before deploying to production
+- Use strong secrets for all authentication tokens
+- Configure HTTPS using a reverse proxy (nginx, traefik, caddy)
+- Regularly update Docker images for security patches
+- Backup your data regularly
 
 ## 🔍 Logging
 
 ```shell
-docker compose logs -f db
+docker compose --env-file .env logs -f redis
 ```
 
 ## 🛠️ Management
 
-### Connect to Redis CLI
-```shell
-docker compose exec db redis-cli -a password
-```
+```bash
+# Start services
+docker compose --env-file .env up -d
 
-### Common Commands
-```shell
-# Test connection
-docker compose exec db redis-cli -a password PING
+# Stop services
+docker compose --env-file .env down
 
-# Get info
-docker compose exec db redis-cli -a password INFO
+# Update to latest images
+docker compose --env-file .env pull && docker compose --env-file .env up -d
 
-# Monitor commands
-docker compose exec db redis-cli -a password MONITOR
+# View logs
+docker compose --env-file .env logs -f
 
-# Check memory usage
-docker compose exec db redis-cli -a password INFO memory
-```
-
-## 🔄 Backup & Restore
-
-### Backup
-```shell
-# Trigger RDB snapshot
-docker compose exec db redis-cli -a password BGSAVE
-
-# Copy RDB file
-cp volumes/db/redis/redis/dump.rdb backup-$(date +%Y%m%d).rdb
-```
-
-### Restore
-```shell
-# Stop Redis
-docker compose down
-
-# Replace RDB file
-cp backup-YYYYMMDD.rdb volumes/db/redis/redis/dump.rdb
-
-# Start Redis
-docker compose up -d
-```
-
-## 📊 Performance
-
-### Memory Usage
-```shell
-docker compose exec db redis-cli -a password INFO memory | grep used_memory_human
-```
-
-### Connected Clients
-```shell
-docker compose exec db redis-cli -a password CLIENT LIST
-```
-
-### Slow Log
-```shell
-docker compose exec db redis-cli -a password SLOWLOG GET 10
+# Restart services
+docker compose --env-file .env restart
 ```
 
 ## 📋 Requirements
 
 - Docker Engine 20.10+
 - Docker Compose V2+
-- 128MB+ RAM minimum (depends on dataset)
-
-## 🆘 Troubleshooting
-
-### Out of memory
-```shell
-# Check memory usage
-docker compose exec db redis-cli -a password INFO memory
-
-# Set eviction policy
-docker compose exec db redis-cli -a password CONFIG SET maxmemory-policy allkeys-lru
-```
-
-### Connection refused
-```shell
-# Check if running
-docker compose ps
-
-# Test connection
-docker compose exec db redis-cli -a password PING
-```
 
 ## 🤝 Author
 
-🤖 casjay: [Github](https://github.com/casjay) 🤖  
+🤖 casjay: [Github](https://github.com/casjay) 🤖
 🦄 composemgr: [Github](https://github.com/composemgr) 🦄
