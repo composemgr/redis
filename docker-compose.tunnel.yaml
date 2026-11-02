@@ -19,6 +19,8 @@ services:
       TZ: ${TZ:-America/New_York}
       CONTAINER_NAME: redis-app
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+    ports:
+      - '6379:6379'
     volumes:
       - './volumes/db/redis/redis:/var/lib/redis/data:z'
     extra_hosts:
